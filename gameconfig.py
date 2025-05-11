@@ -1,15 +1,15 @@
 level_map = [
-'                         ',
-'                         ',
-'                         ',
-'                         ',
-'                         ',
-'                  XXX    ',
-'          XXXXXX         ',
-'       P              X  ',
-'       X                 ',
-'     XXX    XX           ',
-'XXXXXXXXX XXXXXXXXXXXXXXX'                         
+'                                                  ',
+'                                                  ',
+'                                                  ',
+'                                                  ',
+'          X                                       ',
+'          X       XXX                             ',
+'          XXXXXX                                  ',
+'          X           X                           ',
+'       X  X                                       ',
+'P    XXX  X XX               A                    ',
+'XXXXXXXXX XXXXXXXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXX'                         
 ]
 
 # Game config
