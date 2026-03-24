@@ -54,6 +54,7 @@ class Player(pygame.sprite.Sprite):
         self.dance_timer = 0
         self.super_jump_timer = 0
         self.super_jump_available = False
+        self.sound_events = []
 
     def import_character_assets(self):
         character_path = GRAPHICS_DIR / "character"
@@ -317,14 +318,24 @@ class Player(pygame.sprite.Sprite):
     def jump(self):
         self.direction.y = self.jump_speed
         self.on_ground = False
+        self.queue_sound_event("jump")
 
     def super_jump(self):
         self.direction.y = PLAYER_SUPER_JUMP_SPEED
         self.on_ground = False
+        self.queue_sound_event("super_jump")
 
     def reset_jump_chain(self):
         self.super_jump_timer = 0
         self.super_jump_available = False
+
+    def queue_sound_event(self, sound_name):
+        self.sound_events.append(sound_name)
+
+    def consume_sound_events(self):
+        queued = list(self.sound_events)
+        self.sound_events.clear()
+        return queued
 
     def start_hurt(self, duration=PLAYER_HURT_DURATION):
         self.hurt_timer = duration

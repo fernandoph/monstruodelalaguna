@@ -73,7 +73,7 @@ El flujo esperado del juego es:
 
 - El estado `paused` congela entidades y fisica
 - Debe mostrar un overlay simple con opcion de continuar o reiniciar
-- El audio puede bajar de volumen o pausarse
+- La musica del nivel se pausa y se reanuda al volver a jugar
 
 ## Reglas de dano y reinicio
 
@@ -86,10 +86,12 @@ El flujo esperado del juego es:
 
 ## Feedback esperado
 
+- Al saltar o hacer `super jump`: sonido breve y legible
 - Al juntar un pez: efecto visual y sonido corto
 - Al recibir dano: animacion o flash y sonido
 - Al activar un surtidor: columna de burbujas, brillo y mensaje corto
 - Al neutralizar un enemigo con burbujas: estallido visual reconocible
+- En menu y gameplay: bucles musicales suaves que no tapen los efectos
 - Al completar nivel: fanfarria breve, baile del monstruo y transicion
 - Al pausar: overlay claro
 - Al llegar a una salida bloqueada: feedback de que faltan peces

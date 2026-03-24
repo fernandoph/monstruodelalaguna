@@ -56,8 +56,10 @@ class Level:
         self.tutorial_text = ""
         self.tutorial_timer = 0
         self.shown_hints = set()
+        self.sound_events = []
         self.bubble_particles = []
         self.damage_flash_timer = 0
+        self.exit_open_announced = False
         self.camera_offset_x = 0
         self.reserved_markers = {}
         self.setup_level(level_definition.layout)
@@ -228,6 +230,14 @@ class Level:
         self.tutorial_text = text
         self.tutorial_timer = duration
 
+    def queue_sound_event(self, sound_name):
+        self.sound_events.append(sound_name)
+
+    def consume_sound_events(self):
+        queued = list(self.sound_events)
+        self.sound_events.clear()
+        return queued
+
     def spawn_bubble_burst(self, center):
         velocities = (
             (-1.2, -3.6),
@@ -267,6 +277,10 @@ class Level:
     def update_exits(self):
         for exit_sprite in self.exits.sprites():
             exit_sprite.set_open(self.exit_open)
+        if self.exit_open and not self.exit_open_announced:
+            self.exit_open_announced = True
+            self.queue_sound_event("exit_open")
+            self.show_event_message("La salida ya esta abierta", duration=85)
 
     def collect_fish(self):
         player = self.player.sprite
@@ -274,6 +288,8 @@ class Level:
         for fish in collected:
             fish.kill()
         self.collected_fish += len(collected)
+        if collected:
+            self.queue_sound_event("fish_collect")
 
     def trigger_failure(self, reason):
         if self.fail_countdown > 0 or self.completion_countdown > 0:
@@ -281,6 +297,7 @@ class Level:
         self.failure_reason = reason
         self.fail_countdown = 30
         self.damage_flash_timer = 18
+        self.queue_sound_event("damage")
         self.player.sprite.start_hurt()
 
     def check_hazards(self):
@@ -311,6 +328,7 @@ class Level:
             dim_state_changed = lantern_fish.update_glow(player)
             if dim_state_changed and lantern_fish.dimmed:
                 self.show_event_message("La linterna se encoge cuando te acercas", duration=80)
+                self.queue_sound_event("lantern_dim")
 
     def update_bubble_launchers(self):
         player = self.player.sprite
@@ -318,6 +336,7 @@ class Level:
             if launcher.rect.colliderect(player.hitbox):
                 if launcher.activate():
                     self.show_event_message("Surtidor activado", duration=70)
+                    self.queue_sound_event("bubble_activate")
 
     def resolve_bubble_effects(self):
         for launcher in self.bubble_launchers.sprites():
@@ -325,18 +344,23 @@ class Level:
                 continue
 
             bubble_rect = launcher.bubble_rect
+            hit_enemy = False
             for ant in self.water_ants.sprites():
                 if bubble_rect.colliderect(ant.rect):
                     launcher.note_enemy_hit()
                     self.spawn_bubble_burst(ant.rect.center)
                     self.show_event_message("La burbuja neutralizo una hormiga", duration=80)
                     ant.kill()
+                    hit_enemy = True
             for octopus in self.octopuses.sprites():
                 if bubble_rect.colliderect(octopus.rect):
                     launcher.note_enemy_hit()
                     self.spawn_bubble_burst(octopus.rect.center)
                     self.show_event_message("La columna de burbujas despejo el pulpo", duration=80)
                     octopus.kill()
+                    hit_enemy = True
+            if hit_enemy:
+                self.queue_sound_event("bubble_hit")
 
     def check_exit_collision(self):
         player = self.player.sprite
@@ -347,6 +371,7 @@ class Level:
             if self.exit_open:
                 if self.completion_countdown == 0:
                     self.completion_countdown = 45
+                    self.queue_sound_event("level_complete")
                     player.start_dance(duration=self.completion_countdown)
                 return
 
@@ -410,6 +435,8 @@ class Level:
         player = self.player.sprite
         lock_input = self.fail_countdown > 0 or self.completion_countdown > 0
         player.update(lock_input=lock_input)
+        for sound_name in player.consume_sound_events():
+            self.queue_sound_event(sound_name)
         self.scroll_x()
         self.update_world_shift()
         self.horizontal_movement_collision()

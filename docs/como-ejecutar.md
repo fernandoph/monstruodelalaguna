@@ -52,6 +52,7 @@ En el estado actual del juego:
 - las burbujas suben en columna, tienen recarga corta y pueden eliminar hormigas o pulpos
 - los peces linterna pierden intensidad y se alejan cuando el jugador se acerca
 - el `level_01` ya usa estas mecanicas como parte del recorrido y de la recoleccion de peces
+- el juego ya tiene musica de menu y de nivel, mas efectos procedurales para salto, `super jump`, pez, dano, burbujas, pausa y victoria
 
 ## Problemas comunes
 
@@ -68,5 +69,13 @@ Hoy solo hay frames reales para `idle`. Las animaciones faltantes se generan de 
 Se puede correr un smoke test sin abrir ventana real:
 
 ```bash
-SDL_VIDEODRIVER=dummy ./venv/bin/python -c "from game import Game; Game().run(max_frames=2)"
+SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ./venv/bin/python -c "from game import Game; Game().run(max_frames=2)"
+```
+
+### Quiero correrlo sin sonido real
+
+Si el entorno no tiene dispositivo de audio o solo queres validar el loop:
+
+```bash
+SDL_AUDIODRIVER=dummy ./venv/bin/python monstruo.py
 ```

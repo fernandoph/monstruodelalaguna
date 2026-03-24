@@ -98,6 +98,12 @@ Definir el inventario minimo de produccion audiovisual para que el juego tenga i
 
 ## Audio
 
+Estado actual:
+
+- El proyecto ya usa audio procedural generado en runtime para no depender de `.wav` finales.
+- Esa capa sirve como placeholder funcional y como base de integracion.
+- Cuando existan assets de audio finales, la prioridad debe ser reemplazar la fuente sin cambiar los eventos del juego.
+
 ### Musica
 
 - tema de menu

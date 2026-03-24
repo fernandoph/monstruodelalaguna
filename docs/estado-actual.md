@@ -30,6 +30,8 @@ El proyecto ya no es solo un prototipo tecnico. Hoy existe un primer nivel jugab
 - Algas moviles que transportan al jugador
 - Lanzadores de burbujas con neutralizacion de enemigos
 - Peces linterna con brillo reactivo
+- Musica de menu y gameplay generada de forma procedural
+- Efectos de sonido procedurales para acciones y estados principales
 
 ## Lo que todavia falta
 
@@ -38,13 +40,12 @@ El proyecto ya no es solo un prototipo tecnico. Hoy existe un primer nivel jugab
 - Curva completa de progresion entre niveles
 - Secuencia de victoria final del juego completo
 - Assets finales consistentes para jugador, enemigos y UI
-- Sonido y musica
 - Pasada de balance y testing mas profunda
 
 ## Deuda tecnica visible
 
 - El arte sigue siendo procedural o placeholder en varias entidades
-- No hay audio integrado
+- El audio actual es sintetico y funcional, no final
 - El contenido todavia esta concentrado en un solo nivel
 - Falta una bateria de pruebas mas formal; hoy predominan smoke tests
 

@@ -1,7 +1,10 @@
 import pygame
 
+from audio.manager import AudioManager
 from data.level_loader import load_level_definition
 from settings import (
+    AUDIO_BUFFER_SIZE,
+    AUDIO_SAMPLE_RATE,
     DEFAULT_LEVEL_ID,
     FPS,
     HUD_ACCENT_COLOR,
@@ -20,6 +23,7 @@ from world.level import Level
 
 class Game:
     def __init__(self, level_id=DEFAULT_LEVEL_ID):
+        pygame.mixer.pre_init(frequency=AUDIO_SAMPLE_RATE, size=-16, channels=1, buffer=AUDIO_BUFFER_SIZE)
         pygame.init()
         self.clock = pygame.time.Clock()
         self.screen = None
@@ -29,12 +33,15 @@ class Game:
         self.current_level_index = 0
         self.difficulty = None
         self.lives = None
-        self.state = "menu"
+        self.state = None
+        self.audio = None
         self.title_font = pygame.font.Font(None, 72)
         self.font = pygame.font.Font(None, 36)
         self.small_font = pygame.font.Font(None, 28)
         pygame.display.set_caption(SCREEN_CAPTION)
         self.load_level(level_id)
+        self.audio = AudioManager()
+        self.change_state("menu")
 
     def load_level(self, level_id):
         self.level_definition = load_level_definition(level_id)
@@ -42,19 +49,50 @@ class Game:
         self.screen = pygame.display.set_mode(screen_size, pygame.DOUBLEBUF)
         self.level = Level(self.level_definition, self.screen)
 
+    def change_state(self, new_state):
+        if new_state == self.state:
+            return
+
+        previous_state = self.state
+        self.state = new_state
+
+        if self.audio is None:
+            return
+
+        if new_state == "menu":
+            self.audio.play_music("menu")
+        elif new_state == "playing":
+            if previous_state == "paused":
+                self.audio.resume_music()
+            else:
+                self.audio.play_music("lagoon")
+        elif new_state == "paused":
+            self.audio.play_sfx("pause")
+            self.audio.pause_music()
+        elif new_state == "game_over":
+            self.audio.play_music(None)
+            self.audio.play_sfx("game_over")
+        elif new_state == "victory":
+            self.audio.play_music(None)
+            self.audio.play_sfx("victory")
+
     def start_new_game(self, difficulty):
         self.difficulty = difficulty
         self.lives = None if difficulty == "facil" else PLAYER_MAX_LIVES
         self.current_level_index = 0
         self.load_level(self.level_order[self.current_level_index])
-        self.state = "playing"
+        if self.audio:
+            self.audio.play_sfx("menu_select")
+        self.change_state("playing")
 
-    def restart_level(self):
+    def restart_level(self, play_sound=True):
         self.load_level(self.level_definition.level_id)
-        self.state = "playing"
+        if play_sound and self.audio:
+            self.audio.play_sfx("restart")
+        self.change_state("playing")
 
     def return_to_menu(self):
-        self.state = "menu"
+        self.change_state("menu")
 
     def handle_menu_key(self, event):
         if event.key == pygame.K_1:
@@ -64,13 +102,13 @@ class Game:
 
     def handle_playing_key(self, event):
         if event.key == pygame.K_p:
-            self.state = "paused"
+            self.change_state("paused")
         elif event.key == pygame.K_r:
             self.restart_level()
 
     def handle_paused_key(self, event):
         if event.key in (pygame.K_p, pygame.K_ESCAPE):
-            self.state = "playing"
+            self.change_state("playing")
         elif event.key == pygame.K_r:
             self.restart_level()
         elif event.key == pygame.K_m:
@@ -99,31 +137,34 @@ class Game:
         if self.difficulty == "normal":
             self.lives -= 1
             if self.lives <= 0:
-                self.state = "game_over"
+                self.change_state("game_over")
                 return
-        self.restart_level()
+        self.restart_level(play_sound=False)
 
     def handle_level_complete(self):
         next_level_id = self.level_definition.next_level
         if next_level_id:
             self.load_level(next_level_id)
-            self.state = "playing"
+            self.change_state("playing")
             return
 
         next_index = self.current_level_index + 1
         if next_index < len(self.level_order):
             self.current_level_index = next_index
             self.load_level(self.level_order[self.current_level_index])
-            self.state = "playing"
+            self.change_state("playing")
             return
 
-        self.state = "victory"
+        self.change_state("victory")
 
     def update(self):
         if self.state != "playing":
             return
 
         self.level.update()
+        for sound_name in self.level.consume_sound_events():
+            if self.audio:
+                self.audio.play_sfx(sound_name)
         if self.level.failed:
             self.handle_level_failure()
         elif self.level.completed:
