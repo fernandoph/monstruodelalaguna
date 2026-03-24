@@ -2,10 +2,10 @@
 
 
 
-          X
-          X       XXX
-          XXXXXX
+              F
+          X              XXX
+          XXXXXX                     F
           X           X
-       X  X
-P    XXX  X XX               A
-XXXXXXXXX XXXXXXXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXX
+       X  X               F
+P    XXX  X XX               E                 F
+XXXXXXXXX XXXXXX   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

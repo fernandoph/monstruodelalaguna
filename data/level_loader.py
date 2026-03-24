@@ -1,6 +1,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 from settings import (
     ALLOWED_LEVEL_MARKERS,
@@ -17,6 +18,7 @@ class LevelDefinition:
     name: str
     layout: list[str]
     fish_goal: int
+    next_level: Optional[str]
     background_color: tuple[int, int, int]
     metadata_path: Path
     layout_path: Path
@@ -66,6 +68,7 @@ def load_level_definition(level_id):
         name=metadata.get("name", level_id.replace("_", " ").title()),
         layout=layout,
         fish_goal=int(metadata.get("fish_goal", 0)),
+        next_level=metadata.get("next_level"),
         background_color=parse_color(
             metadata.get("background_color", SCREEN_BACKGROUND_COLOR)
         ),
