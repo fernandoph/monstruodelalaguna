@@ -56,7 +56,11 @@ class Player(pygame.sprite.Sprite):
 
     def import_character_assets(self):
         character_path = GRAPHICS_DIR / "character"
-        idle_frames = import_folder(character_path / "idle")
+        idle_path = character_path / "idle"
+        if self.animation_folder_has_frames(idle_path):
+            idle_frames = import_folder(idle_path)
+        else:
+            idle_frames = self.build_procedural_idle_frames()
         animations = {"idle": idle_frames}
 
         for animation_name in PLAYER_ANIMATIONS:
@@ -73,6 +77,51 @@ class Player(pygame.sprite.Sprite):
                 )
 
         return animations
+
+    def build_procedural_idle_frames(self):
+        return [self.build_procedural_frame(frame_index) for frame_index in range(5)]
+
+    def build_procedural_frame(self, frame_index):
+        width = 72
+        height = 62
+        surface = pygame.Surface((width, height), pygame.SRCALPHA)
+
+        body_y = 14 + (frame_index % 2)
+        body_rect = pygame.Rect(12, body_y, 38, 28)
+        belly_rect = pygame.Rect(22, body_y + 12, 20, 12)
+        eye_y = 18 + (frame_index % 2)
+        mouth_y = 27 + (frame_index % 2)
+        tail_shift = (-4, -2, 0, -2, -4)[frame_index]
+        arm_shift = (-1, 1, 2, 0, -1)[frame_index]
+
+        pygame.draw.polygon(
+            surface,
+            (82, 44, 151),
+            [(14, 24), (4, 12 + tail_shift), (0, 30), (10, 44)],
+        )
+        pygame.draw.ellipse(surface, (74, 34, 142), body_rect)
+        pygame.draw.ellipse(surface, (112, 64, 188), belly_rect)
+        pygame.draw.ellipse(surface, (72, 36, 152), (34, 8, 22, 18))
+        pygame.draw.polygon(surface, (225, 96, 66), [(44, 10), (48, 2), (54, 10)])
+
+        for index in range(3):
+            spike_x = 18 + index * 10
+            pygame.draw.polygon(
+                surface,
+                (46, 182, 136),
+                [(spike_x, 14), (spike_x + 4, 4), (spike_x + 8, 14)],
+            )
+
+        pygame.draw.circle(surface, (255, 255, 255), (46, eye_y), 4)
+        pygame.draw.circle(surface, (24, 24, 30), (47, eye_y), 2)
+        pygame.draw.line(surface, (235, 235, 244), (50, mouth_y), (58, mouth_y + 1), 2)
+
+        pygame.draw.line(surface, (48, 26, 92), (26, 40), (24 + arm_shift, 51), 4)
+        pygame.draw.line(surface, (48, 26, 92), (34, 40), (36 + arm_shift, 52), 4)
+        pygame.draw.line(surface, (48, 26, 92), (24, 52), (20, 60), 5)
+        pygame.draw.line(surface, (48, 26, 92), (38, 52), (39, 60), 5)
+
+        return surface.convert_alpha()
 
     def build_generated_animation(self, animation_name, idle_frames):
         animation_builders = {

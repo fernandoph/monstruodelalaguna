@@ -42,6 +42,8 @@ El flujo esperado del juego es:
 - El jugador recolecta peces al tocarlos
 - El jugador sufre dano al caer en pozos o tocar enemigos hostiles
 - El jugador hace un baile al completar un nivel
+- Al tocar un lanzador de burbujas, este se activa automaticamente y puede neutralizar enemigos en su columna
+- Los peces linterna iluminan el entorno pero bajan su brillo si el jugador se acerca demasiado
 
 ## Dificultad
 

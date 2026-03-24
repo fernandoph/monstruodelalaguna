@@ -43,6 +43,12 @@ El juego arranca desde [monstruo.py](/home/fernandoph/projects/monstruodelalagun
 
 La ventana para el segundo toque es deliberadamente generosa: alrededor de `0.4s` a `60 FPS`, pensada para que una nina de 7 anios pueda activarlo sin precision fina.
 
+En el estado actual del juego:
+
+- los lanzadores de burbujas se activan al tocarlos
+- las burbujas suben en columna y pueden eliminar hormigas o pulpos
+- los peces linterna pierden intensidad cuando el jugador se acerca
+
 ## Problemas comunes
 
 ### Se abre una ventana pero no inicia la partida

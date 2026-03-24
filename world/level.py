@@ -1,10 +1,17 @@
 import pygame
 
+from entities.algae_platform import AlgaePlatform
+from entities.bubble_launcher import BubbleLauncher
 from entities.fish import Fish
 from entities.hazard import Hazard
+from entities.lantern_fish import LanternFish
 from entities.level_exit import LevelExit
+from entities.octopus import Octopus
 from entities.player import Player
+from entities.water_ant import WaterAnt
 from settings import (
+    ALGAE_PLATFORM_MARKER,
+    BUBBLE_LAUNCHER_MARKER,
     EMPTY_TILE_MARKER,
     EXIT_MARKERS,
     FISH_MARKER,
@@ -18,9 +25,12 @@ from settings import (
     LAGOON_SURFACE_LINE,
     LAGOON_WATER_BOTTOM,
     LAGOON_WATER_TOP,
+    LANTERN_FISH_MARKER,
+    OCTOPUS_MARKER,
     PLAYER_SPAWN_MARKER,
     SOLID_TILE_MARKER,
     TILE_SIZE,
+    WATER_ANT_MARKER,
 )
 from world.tile import Tile
 
@@ -49,6 +59,11 @@ class Level:
         self.hazards = pygame.sprite.Group()
         self.fishes = pygame.sprite.Group()
         self.exits = pygame.sprite.Group()
+        self.algae_platforms = pygame.sprite.Group()
+        self.water_ants = pygame.sprite.Group()
+        self.octopuses = pygame.sprite.Group()
+        self.bubble_launchers = pygame.sprite.Group()
+        self.lantern_fishes = pygame.sprite.Group()
         self.player = pygame.sprite.GroupSingle()
 
         for row_index, row in enumerate(layout):
@@ -77,6 +92,16 @@ class Level:
                     self.exits.add(LevelExit((x, y)))
                 elif cell == HAZARD_MARKER:
                     self.hazards.add(Hazard((x, y), TILE_SIZE))
+                elif cell == ALGAE_PLATFORM_MARKER:
+                    self.algae_platforms.add(AlgaePlatform((x, y)))
+                elif cell == WATER_ANT_MARKER:
+                    self.water_ants.add(WaterAnt((x, y)))
+                elif cell == OCTOPUS_MARKER:
+                    self.octopuses.add(Octopus((x, y)))
+                elif cell == BUBBLE_LAUNCHER_MARKER:
+                    self.bubble_launchers.add(BubbleLauncher((x, y)))
+                elif cell == LANTERN_FISH_MARKER:
+                    self.lantern_fishes.add(LanternFish((x, y)))
                 elif cell != EMPTY_TILE_MARKER:
                     self.reserved_markers.setdefault(cell, []).append((x, y))
 
@@ -123,6 +148,7 @@ class Level:
         player = self.player.sprite
         player.on_ground = False
         player.apply_gravity()
+        landed_on_platform = False
 
         for sprite in self.tiles.sprites():
             if sprite.rect.colliderect(player.hitbox):
@@ -134,6 +160,18 @@ class Level:
                 elif player.direction.y < 0:
                     player.hitbox.top = sprite.rect.bottom
                     player.direction.y = 0
+
+        for platform in self.algae_platforms.sprites():
+            if not platform.rect.colliderect(player.hitbox):
+                continue
+            if player.direction.y >= 0 and player.hitbox.bottom <= platform.rect.top + 24:
+                player.hitbox.bottom = platform.rect.top
+                player.direction.y = 0
+                player.on_ground = True
+                landed_on_platform = True
+
+        if landed_on_platform:
+            player.reset_jump_chain()
 
         player.sync_rect()
 
@@ -159,6 +197,16 @@ class Level:
         self.camera_offset_x -= self.world_shift
         for group in (self.tiles, self.hazards, self.fishes, self.exits):
             group.update(self.world_shift)
+        for sprite in self.algae_platforms.sprites():
+            sprite.update(self.world_shift)
+        for sprite in self.water_ants.sprites():
+            sprite.update(self.world_shift)
+        for sprite in self.octopuses.sprites():
+            sprite.update(self.world_shift)
+        for sprite in self.bubble_launchers.sprites():
+            sprite.update(self.world_shift)
+        for sprite in self.lantern_fishes.sprites():
+            sprite.update(self.world_shift)
 
     def update_exits(self):
         for exit_sprite in self.exits.sprites():
@@ -189,6 +237,40 @@ class Level:
             if hazard.rect.colliderect(player.hitbox):
                 self.trigger_failure("hazard")
                 return
+
+        for ant in self.water_ants.sprites():
+            if ant.rect.colliderect(player.hitbox):
+                self.trigger_failure("water_ant")
+                return
+
+        for octopus in self.octopuses.sprites():
+            if octopus.update_threat(player):
+                self.trigger_failure("octopus")
+                return
+
+    def update_lantern_fishes(self):
+        player = self.player.sprite
+        for lantern_fish in self.lantern_fishes.sprites():
+            lantern_fish.update_glow(player)
+
+    def update_bubble_launchers(self):
+        player = self.player.sprite
+        for launcher in self.bubble_launchers.sprites():
+            if launcher.rect.colliderect(player.hitbox):
+                launcher.activate()
+
+    def resolve_bubble_effects(self):
+        for launcher in self.bubble_launchers.sprites():
+            if launcher.active_timer <= 0:
+                continue
+
+            bubble_rect = launcher.bubble_rect
+            for ant in self.water_ants.sprites():
+                if bubble_rect.colliderect(ant.rect):
+                    ant.kill()
+            for octopus in self.octopuses.sprites():
+                if bubble_rect.colliderect(octopus.rect):
+                    octopus.kill()
 
     def check_exit_collision(self):
         player = self.player.sprite
@@ -228,6 +310,9 @@ class Level:
         self.vertical_movement_collision()
         self.collect_fish()
         self.update_exits()
+        self.update_lantern_fishes()
+        self.update_bubble_launchers()
+        self.resolve_bubble_effects()
         self.check_exit_collision()
         self.check_hazards()
         player.get_status()
@@ -236,10 +321,19 @@ class Level:
 
     def draw(self):
         self.draw_background()
+        for lantern_fish in self.lantern_fishes.sprites():
+            lantern_fish.draw_glow(self.display_surface)
         self.tiles.draw(self.display_surface)
+        self.algae_platforms.draw(self.display_surface)
         self.hazards.draw(self.display_surface)
+        for launcher in self.bubble_launchers.sprites():
+            launcher.draw_effect(self.display_surface)
+        self.bubble_launchers.draw(self.display_surface)
         self.fishes.draw(self.display_surface)
+        self.water_ants.draw(self.display_surface)
+        self.octopuses.draw(self.display_surface)
         self.exits.draw(self.display_surface)
+        self.lantern_fishes.draw(self.display_surface)
         self.player.draw(self.display_surface)
 
     def run(self):

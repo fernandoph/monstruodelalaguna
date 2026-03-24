@@ -1,11 +1,10 @@
 
 
-
-
-              F
+                        L
+              F         G                 F
           X              XXX
-          XXXXXX                     F
+          XXXXXX      N              F          O
           X           X
-       X  X               F
+       X  X           B    F                    B   L
 P    XXX  X XX               E                 F
 XXXXXXXXX XXXXXX   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

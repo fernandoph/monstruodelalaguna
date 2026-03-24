@@ -5,5 +5,5 @@
   "fish_goal": 4,
   "next_level": null,
   "background_color": [4, 12, 26],
-  "allowed_markers": [" ", "X", "P", "E", "A", "F", "H"]
+  "allowed_markers": [" ", "X", "P", "E", "A", "F", "H", "G", "N", "O", "B", "L"]
 }
