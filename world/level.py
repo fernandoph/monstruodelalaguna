@@ -42,6 +42,7 @@ class Level:
         self.camera_offset_x = 0
         self.reserved_markers = {}
         self.setup_level(level_definition.layout)
+        self.build_background_cache()
 
     def setup_level(self, layout):
         self.tiles = pygame.sprite.Group()
@@ -246,23 +247,37 @@ class Level:
         self.draw()
 
     def draw_background(self):
+        self.display_surface.blit(self.background_base_surface, (0, 0))
+        self.blit_repeated_layer(self.lily_pad_surface, 0.12)
+        self.blit_repeated_layer(self.particle_surface, 0.08)
+        self.blit_repeated_layer(self.reed_far_surface, 0.25)
+        self.blit_repeated_layer(self.reed_near_surface, 0.55)
+
+    def build_background_cache(self):
         width = self.display_surface.get_width()
         height = self.display_surface.get_height()
+        self.horizon_y = max(72, int(height * 0.24))
 
-        horizon_y = max(72, int(height * 0.24))
-        self.draw_vertical_gradient((0, 0, width, horizon_y), LAGOON_SKY_TOP, LAGOON_SKY_BOTTOM)
+        base_surface = pygame.Surface((width, height)).convert()
         self.draw_vertical_gradient(
-            (0, horizon_y, width, height - horizon_y),
+            base_surface,
+            (0, 0, width, self.horizon_y),
+            LAGOON_SKY_TOP,
+            LAGOON_SKY_BOTTOM,
+        )
+        self.draw_vertical_gradient(
+            base_surface,
+            (0, self.horizon_y, width, height - self.horizon_y),
             LAGOON_WATER_TOP,
             LAGOON_WATER_BOTTOM,
         )
 
-        glow_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-        pygame.draw.circle(glow_surface, LAGOON_SUN_GLOW, (width // 4, horizon_y // 2), 150)
-        pygame.draw.circle(glow_surface, LAGOON_SUN_GLOW, (width // 3, horizon_y - 10), 110)
-        self.display_surface.blit(glow_surface, (0, 0))
+        glow_surface = pygame.Surface((width, height), pygame.SRCALPHA).convert_alpha()
+        pygame.draw.circle(glow_surface, LAGOON_SUN_GLOW, (width // 4, self.horizon_y // 2), 150)
+        pygame.draw.circle(glow_surface, LAGOON_SUN_GLOW, (width // 3, self.horizon_y - 10), 110)
+        base_surface.blit(glow_surface, (0, 0))
 
-        surface_band = pygame.Surface((width, 32), pygame.SRCALPHA)
+        surface_band = pygame.Surface((width, 32), pygame.SRCALPHA).convert_alpha()
         for index in range(6):
             y = 4 + index * 4
             pygame.draw.line(
@@ -272,15 +287,21 @@ class Level:
                 (width, y + (index % 2)),
                 2,
             )
-        self.display_surface.blit(surface_band, (0, horizon_y - 14))
+        base_surface.blit(surface_band, (0, self.horizon_y - 14))
 
-        self.draw_water_plants(height, depth_factor=0.25, color=LAGOON_REED_LIGHT, base_height=140)
-        self.draw_water_plants(height, depth_factor=0.55, color=LAGOON_REED_DARK, base_height=190)
-        self.draw_lily_pads(horizon_y)
-        self.draw_mist(width, horizon_y)
-        self.draw_underwater_particles(width, height, horizon_y)
+        mist_surface = pygame.Surface((width, self.horizon_y + 40), pygame.SRCALPHA).convert_alpha()
+        for index in range(5):
+            mist_rect = pygame.Rect(index * 220 - 30, self.horizon_y - 20 + (index % 2) * 8, 240, 44)
+            pygame.draw.ellipse(mist_surface, LAGOON_MIST, mist_rect)
+        base_surface.blit(mist_surface, (0, 0))
 
-    def draw_vertical_gradient(self, rect, top_color, bottom_color):
+        self.background_base_surface = base_surface
+        self.reed_far_surface = self.build_water_plant_pattern(420, height, LAGOON_REED_LIGHT, 140)
+        self.reed_near_surface = self.build_water_plant_pattern(420, height, LAGOON_REED_DARK, 190)
+        self.lily_pad_surface = self.build_lily_pad_pattern(480)
+        self.particle_surface = self.build_particle_pattern(520, height)
+
+    def draw_vertical_gradient(self, target_surface, rect, top_color, bottom_color):
         x, y, width, height = rect
         if height <= 0:
             return
@@ -292,20 +313,18 @@ class Level:
                 for index in range(3)
             )
             pygame.draw.line(
-                self.display_surface,
+                target_surface,
                 color,
                 (x, y + row),
                 (x + width, y + row),
             )
 
-    def draw_water_plants(self, screen_height, depth_factor, color, base_height):
-        width = self.display_surface.get_width()
-        layer_surface = pygame.Surface((width, screen_height), pygame.SRCALPHA)
-        parallax_offset = (self.camera_offset_x * depth_factor) % 140
+    def build_water_plant_pattern(self, pattern_width, screen_height, color, base_height):
+        layer_surface = pygame.Surface((pattern_width, screen_height), pygame.SRCALPHA).convert_alpha()
         base_y = screen_height - 10
 
-        for index in range(-2, (width // 70) + 4):
-            root_x = int(index * 70 - parallax_offset)
+        for index in range(-2, (pattern_width // 70) + 4):
+            root_x = int(index * 70)
             plant_height = base_height + (index % 4) * 18
             for blade_index in range(3):
                 shift = blade_index * 10
@@ -318,16 +337,14 @@ class Level:
                 ]
                 pygame.draw.polygon(layer_surface, color, points)
 
-        self.display_surface.blit(layer_surface, (0, 0))
+        return layer_surface
 
-    def draw_lily_pads(self, horizon_y):
-        width = self.display_surface.get_width()
-        pad_surface = pygame.Surface((width, horizon_y + 24), pygame.SRCALPHA)
-        offset = (self.camera_offset_x * 0.12) % 220
+    def build_lily_pad_pattern(self, pattern_width):
+        pad_surface = pygame.Surface((pattern_width, self.horizon_y + 24), pygame.SRCALPHA).convert_alpha()
 
-        for index in range(-1, (width // 160) + 3):
-            center_x = int(index * 160 - offset)
-            center_y = horizon_y - 6 + (index % 2) * 8
+        for index in range(-1, (pattern_width // 160) + 3):
+            center_x = int(index * 160)
+            center_y = self.horizon_y - 6 + (index % 2) * 8
             pad_rect = pygame.Rect(center_x, center_y, 56, 18)
             pygame.draw.ellipse(pad_surface, (59, 118, 79, 180), pad_rect)
             pygame.draw.line(
@@ -338,23 +355,27 @@ class Level:
                 2,
             )
 
-        self.display_surface.blit(pad_surface, (0, 0))
+        return pad_surface
 
-    def draw_mist(self, width, horizon_y):
-        mist_surface = pygame.Surface((width, horizon_y + 40), pygame.SRCALPHA)
-        for index in range(5):
-            mist_rect = pygame.Rect(index * 220 - 30, horizon_y - 20 + (index % 2) * 8, 240, 44)
-            pygame.draw.ellipse(mist_surface, LAGOON_MIST, mist_rect)
-        self.display_surface.blit(mist_surface, (0, 0))
-
-    def draw_underwater_particles(self, width, height, horizon_y):
-        particle_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-        offset = self.camera_offset_x * 0.08
+    def build_particle_pattern(self, pattern_width, height):
+        particle_surface = pygame.Surface((pattern_width, height), pygame.SRCALPHA).convert_alpha()
 
         for index in range(18):
-            x = int((index * 91 + offset) % (width + 80)) - 40
-            y = horizon_y + 18 + (index * 43) % max(60, height - horizon_y - 28)
+            x = int((index * 91) % (pattern_width + 80)) - 40
+            y = self.horizon_y + 18 + (index * 43) % max(60, height - self.horizon_y - 28)
             radius = 2 + (index % 3)
             pygame.draw.circle(particle_surface, (210, 240, 228, 58), (x, y), radius)
 
-        self.display_surface.blit(particle_surface, (0, 0))
+        return particle_surface
+
+    def blit_repeated_layer(self, layer_surface, depth_factor):
+        layer_width = layer_surface.get_width()
+        if layer_width <= 0:
+            return
+
+        offset = int((self.camera_offset_x * depth_factor) % layer_width)
+        start_x = -offset - layer_width
+        end_x = self.display_surface.get_width() + layer_width
+
+        for x in range(start_x, end_x, layer_width):
+            self.display_surface.blit(layer_surface, (x, 0))

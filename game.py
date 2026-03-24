@@ -39,7 +39,7 @@ class Game:
     def load_level(self, level_id):
         self.level_definition = load_level_definition(level_id)
         screen_size = (SCREEN_WIDTH, self.level_definition.pixel_height)
-        self.screen = pygame.display.set_mode(screen_size)
+        self.screen = pygame.display.set_mode(screen_size, pygame.DOUBLEBUF)
         self.level = Level(self.level_definition, self.screen)
 
     def start_new_game(self, difficulty):
