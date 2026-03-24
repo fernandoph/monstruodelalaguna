@@ -51,7 +51,7 @@ Eso es esperado: primero hay que elegir dificultad con `1` o `2`.
 
 ### El personaje cambia a un sprite repetido al moverse
 
-Hoy solo hay frames reales para `idle`. Las animaciones faltantes reutilizan `idle` hasta que existan assets especificos.
+Hoy solo hay frames reales para `idle`. Las animaciones faltantes se generan de forma procedural a partir de esos frames para que `run`, `jump`, `fall`, `crouch`, `hurt` y `dance` no queden estaticos mientras faltan assets especificos.
 
 ### Quiero ejecutar solo una prueba tecnica
 

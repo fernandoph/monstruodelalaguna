@@ -23,6 +23,16 @@ class Player(pygame.sprite.Sprite):
         self.frame_index = 0.0
         self.animation_speed = 0.15
         self.status = "idle"
+        self.previous_status = self.status
+        self.animation_speeds = {
+            "idle": 0.15,
+            "run": 0.22,
+            "jump": 0.12,
+            "fall": 0.12,
+            "crouch": 0.10,
+            "hurt": 0.28,
+            "dance": 0.24,
+        }
         self.image = self.animations[self.status][0]
         self.rect = self.image.get_rect(topleft=pos)
         self.hitbox = self.rect.inflate(-18, -6)
@@ -57,9 +67,89 @@ class Player(pygame.sprite.Sprite):
             if self.animation_folder_has_frames(animation_path):
                 animations[animation_name] = import_folder(animation_path)
             else:
-                animations[animation_name] = idle_frames
+                animations[animation_name] = self.build_generated_animation(
+                    animation_name,
+                    idle_frames,
+                )
 
         return animations
+
+    def build_generated_animation(self, animation_name, idle_frames):
+        animation_builders = {
+            "run": lambda: self.generate_transformed_frames(
+                idle_frames,
+                angles=(-6, -2, 0, 3, 6),
+                scales=((0.95, 1.05), (1.02, 0.98), (1.06, 0.95), (1.0, 1.0), (0.97, 1.03)),
+                add_colors=((4, 16, 10), (0, 0, 0), (8, 10, 0), (0, 0, 0), (4, 16, 10)),
+            ),
+            "jump": lambda: self.generate_transformed_frames(
+                idle_frames,
+                angles=(5, 0, -5, 0, 4),
+                scales=((0.92, 1.14), (0.90, 1.16), (0.94, 1.10), (0.92, 1.14), (0.90, 1.16)),
+                add_colors=((8, 8, 18),) * len(idle_frames),
+            ),
+            "fall": lambda: self.generate_transformed_frames(
+                idle_frames,
+                angles=(-4, 0, 4, 0, -3),
+                scales=((1.08, 0.92), (1.12, 0.90), (1.05, 0.95), (1.10, 0.90), (1.08, 0.92)),
+                add_colors=((18, 6, 6),) * len(idle_frames),
+            ),
+            "crouch": lambda: self.generate_transformed_frames(
+                idle_frames,
+                angles=(0, 0, 0, 0, 0),
+                scales=((1.10, 0.74), (1.08, 0.76), (1.12, 0.72), (1.08, 0.76), (1.10, 0.74)),
+                add_colors=((0, 0, 0),) * len(idle_frames),
+            ),
+            "hurt": lambda: self.generate_transformed_frames(
+                idle_frames,
+                angles=(12, -12, 10, -10, 0),
+                scales=((1.04, 0.96),) * len(idle_frames),
+                add_colors=((60, 0, 24), (40, 0, 18), (60, 0, 24), (40, 0, 18), (70, 0, 30)),
+            ),
+            "dance": lambda: self.generate_transformed_frames(
+                idle_frames,
+                angles=(-14, 14, -8, 8, 0),
+                scales=((1.02, 1.02), (1.04, 0.98), (0.98, 1.04), (1.04, 0.98), (1.02, 1.02)),
+                add_colors=((12, 20, 0), (24, 18, 0), (12, 20, 0), (24, 18, 0), (18, 24, 0)),
+            ),
+        }
+
+        builder = animation_builders.get(animation_name)
+        if builder is None:
+            return idle_frames
+        return builder()
+
+    def generate_transformed_frames(self, idle_frames, angles, scales, add_colors):
+        transformed_frames = []
+
+        for index, frame in enumerate(idle_frames):
+            transformed_frames.append(
+                self.transform_frame(
+                    frame,
+                    angle=angles[index % len(angles)],
+                    scale=scales[index % len(scales)],
+                    add_color=add_colors[index % len(add_colors)],
+                )
+            )
+
+        return transformed_frames
+
+    def transform_frame(self, frame, angle=0, scale=(1.0, 1.0), add_color=(0, 0, 0)):
+        transformed = frame.copy()
+
+        if add_color != (0, 0, 0):
+            overlay = pygame.Surface(transformed.get_size(), pygame.SRCALPHA)
+            overlay.fill((*add_color, 0))
+            transformed.blit(overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+
+        width = max(1, int(transformed.get_width() * scale[0]))
+        height = max(1, int(transformed.get_height() * scale[1]))
+        transformed = pygame.transform.smoothscale(transformed, (width, height))
+
+        if angle:
+            transformed = pygame.transform.rotate(transformed, angle)
+
+        return transformed
 
     def animation_folder_has_frames(self, path):
         directory = Path(path)
@@ -156,7 +246,11 @@ class Player(pygame.sprite.Sprite):
 
     def animate(self):
         animation = self.animations[self.status]
-        self.frame_index += self.animation_speed
+        if self.status != self.previous_status:
+            self.frame_index = 0
+            self.previous_status = self.status
+
+        self.frame_index += self.animation_speeds.get(self.status, self.animation_speed)
 
         if self.frame_index >= len(animation):
             self.frame_index = 0
