@@ -29,6 +29,7 @@ El flujo esperado del juego es:
 - Flechas izquierda y derecha: mover al personaje
 - Flecha abajo: agacharse
 - Espacio: saltar
+- Dos toques rapidos de `Espacio`: activar un `super jump`
 - `R`: reiniciar nivel
 - `P`: pausar y reanudar
 
@@ -36,6 +37,7 @@ El flujo esperado del juego es:
 
 - El jugador puede moverse a izquierda y derecha
 - El jugador puede saltar solo cuando esta en suelo o plataforma valida
+- Si el jugador vuelve a pulsar salto rapidamente despues del primer salto, puede activar un `super jump` con una ventana amplia de input
 - El jugador puede agacharse para cambiar su pose y eventualmente pasar por sectores bajos
 - El jugador recolecta peces al tocarlos
 - El jugador sufre dano al caer en pozos o tocar enemigos hostiles

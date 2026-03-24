@@ -101,6 +101,7 @@ class Level:
                     player.hitbox.bottom = sprite.rect.top
                     player.direction.y = 0
                     player.on_ground = True
+                    player.reset_jump_chain()
                 elif player.direction.y < 0:
                     player.hitbox.top = sprite.rect.bottom
                     player.direction.y = 0

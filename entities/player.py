@@ -1,17 +1,19 @@
+from pathlib import Path
+
 import pygame
 
 from settings import (
     GRAPHICS_DIR,
-    PLACEHOLDER_ANIMATION_COLORS,
     PLAYER_ANIMATIONS,
     PLAYER_DANCE_DURATION,
     PLAYER_GRAVITY,
     PLAYER_HURT_DURATION,
     PLAYER_JUMP_SPEED,
     PLAYER_SPEED,
-    TILE_SIZE,
+    PLAYER_SUPER_JUMP_SPEED,
+    PLAYER_SUPER_JUMP_WINDOW_FRAMES,
 )
-from support import load_animation_set
+from support import IMAGE_EXTENSIONS, import_folder
 
 
 class Player(pygame.sprite.Sprite):
@@ -39,14 +41,34 @@ class Player(pygame.sprite.Sprite):
         self.facing_right = True
         self.hurt_timer = 0
         self.dance_timer = 0
+        self.super_jump_timer = 0
+        self.super_jump_available = False
 
     def import_character_assets(self):
         character_path = GRAPHICS_DIR / "character"
-        return load_animation_set(
-            character_path,
-            PLAYER_ANIMATIONS,
-            fallback_size=(TILE_SIZE, TILE_SIZE),
-            fallback_colors=PLACEHOLDER_ANIMATION_COLORS,
+        idle_frames = import_folder(character_path / "idle")
+        animations = {"idle": idle_frames}
+
+        for animation_name in PLAYER_ANIMATIONS:
+            if animation_name == "idle":
+                continue
+
+            animation_path = character_path / animation_name
+            if self.animation_folder_has_frames(animation_path):
+                animations[animation_name] = import_folder(animation_path)
+            else:
+                animations[animation_name] = idle_frames
+
+        return animations
+
+    def animation_folder_has_frames(self, path):
+        directory = Path(path)
+        if not directory.is_dir():
+            return False
+
+        return any(
+            file_path.is_file() and file_path.suffix.lower() in IMAGE_EXTENSIONS
+            for file_path in directory.iterdir()
         )
 
     @property
@@ -87,15 +109,8 @@ class Player(pygame.sprite.Sprite):
         self.set_crouching(keys[pygame.K_DOWN])
 
         wants_jump = keys[pygame.K_SPACE]
-        if (
-            wants_jump
-            and not self.jump_held
-            and self.on_ground
-            and not self.crouching
-            and not lock_input
-            and not self.controls_locked
-        ):
-            self.jump()
+        if wants_jump and not self.jump_held:
+            self.handle_jump_press(lock_input=lock_input)
         self.jump_held = wants_jump
 
     def update_timers(self):
@@ -103,6 +118,25 @@ class Player(pygame.sprite.Sprite):
             self.hurt_timer -= 1
         if self.dance_timer > 0:
             self.dance_timer -= 1
+        if self.super_jump_timer > 0:
+            self.super_jump_timer -= 1
+        if self.super_jump_timer == 0:
+            self.super_jump_available = False
+
+    def handle_jump_press(self, lock_input=False):
+        if lock_input or self.controls_locked or self.crouching:
+            return
+
+        if self.on_ground:
+            self.jump()
+            self.super_jump_timer = PLAYER_SUPER_JUMP_WINDOW_FRAMES
+            self.super_jump_available = True
+            return
+
+        if self.super_jump_available and self.super_jump_timer > 0:
+            self.super_jump()
+            self.super_jump_available = False
+            self.super_jump_timer = 0
 
     def get_status(self):
         if self.dance_timer > 0:
@@ -140,15 +174,25 @@ class Player(pygame.sprite.Sprite):
         self.direction.y = self.jump_speed
         self.on_ground = False
 
+    def super_jump(self):
+        self.direction.y = PLAYER_SUPER_JUMP_SPEED
+        self.on_ground = False
+
+    def reset_jump_chain(self):
+        self.super_jump_timer = 0
+        self.super_jump_available = False
+
     def start_hurt(self, duration=PLAYER_HURT_DURATION):
         self.hurt_timer = duration
         self.direction.x = 0
+        self.reset_jump_chain()
 
     def start_dance(self, duration=PLAYER_DANCE_DURATION):
         self.dance_timer = duration
         self.direction.x = 0
         self.direction.y = 0
         self.set_crouching(False)
+        self.reset_jump_chain()
 
     def update(self, lock_input=False):
         self.update_timers()

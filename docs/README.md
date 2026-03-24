@@ -4,6 +4,7 @@ Este directorio concentra la documentacion de producto, tecnica y de produccion 
 
 ## Mapa de documentos
 
+- [Como Ejecutar](./como-ejecutar.md)
 - [Estado Actual](./estado-actual.md)
 - [Guia de Roadmaps](./guia-de-roadmaps.md)
 - [Vision y Alcance](./vision-y-alcance.md)
@@ -17,18 +18,20 @@ Este directorio concentra la documentacion de producto, tecnica y de produccion 
 
 ## Ruta recomendada de lectura
 
-1. Leer [Estado Actual](./estado-actual.md) para entender el punto de partida real del repo.
-2. Leer [Guia de Roadmaps](./guia-de-roadmaps.md) para entender la metodologia general.
-3. Leer [Vision y Alcance](./vision-y-alcance.md) para fijar el objetivo del producto.
-4. Leer [Flujo de Juego](./flujo-de-juego.md) y [Niveles y Progresion](./niveles-y-progresion.md) para entender como se juega.
-5. Leer [Arquitectura Propuesta](./arquitectura-propuesta.md) para decidir estructura tecnica.
-6. Leer [Arte y Audio](./arte-y-audio.md) para producir assets coherentes.
-7. Leer [Milestones de Trabajo](./milestones-de-trabajo.md) para entender los hitos de entrega.
-8. Ejecutar el [Backlog Priorizado](./backlog-priorizado.md) en el orden sugerido.
+1. Leer [Como Ejecutar](./como-ejecutar.md) para levantar el proyecto.
+2. Leer [Estado Actual](./estado-actual.md) para entender el punto de partida real del repo.
+3. Leer [Guia de Roadmaps](./guia-de-roadmaps.md) para entender la metodologia general.
+4. Leer [Vision y Alcance](./vision-y-alcance.md) para fijar el objetivo del producto.
+5. Leer [Flujo de Juego](./flujo-de-juego.md) y [Niveles y Progresion](./niveles-y-progresion.md) para entender como se juega.
+6. Leer [Arquitectura Propuesta](./arquitectura-propuesta.md) para decidir estructura tecnica.
+7. Leer [Arte y Audio](./arte-y-audio.md) para producir assets coherentes.
+8. Leer [Milestones de Trabajo](./milestones-de-trabajo.md) para entender los hitos de entrega.
+9. Ejecutar el [Backlog Priorizado](./backlog-priorizado.md) en el orden sugerido.
 
 ## Como usar esta documentacion
 
 - `Estado Actual` describe lo que existe hoy.
+- `Como Ejecutar` resume instalacion, dependencias y comando de arranque.
 - `Guia de Roadmaps` explica como pensar y estructurar proyectos parecidos.
 - `Vision y Alcance` define que juego se quiere construir.
 - `Flujo de Juego` fija reglas, UX y estados.
