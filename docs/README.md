@@ -5,6 +5,7 @@ Este directorio concentra la documentacion de producto, tecnica y de produccion 
 ## Mapa de documentos
 
 - [Estado Actual](./estado-actual.md)
+- [Guia de Roadmaps](./guia-de-roadmaps.md)
 - [Vision y Alcance](./vision-y-alcance.md)
 - [Flujo de Juego](./flujo-de-juego.md)
 - [Niveles y Progresion](./niveles-y-progresion.md)
@@ -17,16 +18,18 @@ Este directorio concentra la documentacion de producto, tecnica y de produccion 
 ## Ruta recomendada de lectura
 
 1. Leer [Estado Actual](./estado-actual.md) para entender el punto de partida real del repo.
-2. Leer [Vision y Alcance](./vision-y-alcance.md) para fijar el objetivo del producto.
-3. Leer [Flujo de Juego](./flujo-de-juego.md) y [Niveles y Progresion](./niveles-y-progresion.md) para entender como se juega.
-4. Leer [Arquitectura Propuesta](./arquitectura-propuesta.md) para decidir estructura tecnica.
-5. Leer [Arte y Audio](./arte-y-audio.md) para producir assets coherentes.
-6. Leer [Milestones de Trabajo](./milestones-de-trabajo.md) para entender los hitos de entrega.
-7. Ejecutar el [Backlog Priorizado](./backlog-priorizado.md) en el orden sugerido.
+2. Leer [Guia de Roadmaps](./guia-de-roadmaps.md) para entender la metodologia general.
+3. Leer [Vision y Alcance](./vision-y-alcance.md) para fijar el objetivo del producto.
+4. Leer [Flujo de Juego](./flujo-de-juego.md) y [Niveles y Progresion](./niveles-y-progresion.md) para entender como se juega.
+5. Leer [Arquitectura Propuesta](./arquitectura-propuesta.md) para decidir estructura tecnica.
+6. Leer [Arte y Audio](./arte-y-audio.md) para producir assets coherentes.
+7. Leer [Milestones de Trabajo](./milestones-de-trabajo.md) para entender los hitos de entrega.
+8. Ejecutar el [Backlog Priorizado](./backlog-priorizado.md) en el orden sugerido.
 
 ## Como usar esta documentacion
 
 - `Estado Actual` describe lo que existe hoy.
+- `Guia de Roadmaps` explica como pensar y estructurar proyectos parecidos.
 - `Vision y Alcance` define que juego se quiere construir.
 - `Flujo de Juego` fija reglas, UX y estados.
 - `Niveles y Progresion` define contenido y curva de dificultad.
@@ -47,6 +50,7 @@ Este directorio concentra la documentacion de producto, tecnica y de produccion 
 La documentacion queda alineada cuando permite responder con claridad:
 
 - Que existe hoy
+- Como se arma un roadmap reusable
 - Que falta implementar
 - Como deberia jugarse
 - Como deberia organizarse el codigo
