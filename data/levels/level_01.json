@@ -2,7 +2,7 @@
   "id": "level_01",
   "name": "Laguna Inicial",
   "layout": "level_01.txt",
-  "fish_goal": 4,
+  "fish_goal": 5,
   "next_level": null,
   "background_color": [4, 12, 26],
   "allowed_markers": [" ", "X", "P", "E", "A", "F", "H", "G", "N", "O", "B", "L"]

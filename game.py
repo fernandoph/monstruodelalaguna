@@ -185,6 +185,7 @@ class Game:
                 "1: Iniciar en Facil",
                 "2: Iniciar en Normal",
                 "Flechas para moverse, Espacio para saltar",
+                "Doble toque de Espacio para super jump",
                 "P pausa el juego y R reinicia el nivel",
             ],
         )

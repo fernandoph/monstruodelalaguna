@@ -46,6 +46,7 @@ class Player(pygame.sprite.Sprite):
         self.jump_speed = PLAYER_JUMP_SPEED
 
         self.on_ground = False
+        self.current_platform = None
         self.crouching = False
         self.jump_held = False
         self.facing_right = True

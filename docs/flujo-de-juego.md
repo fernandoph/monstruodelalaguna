@@ -44,6 +44,9 @@ El flujo esperado del juego es:
 - El jugador hace un baile al completar un nivel
 - Al tocar un lanzador de burbujas, este se activa automaticamente y puede neutralizar enemigos en su columna
 - Los peces linterna iluminan el entorno pero bajan su brillo si el jugador se acerca demasiado
+- Las hormigas acuaticas patrullan, pero si detectan al jugador cerca cambian a persecucion corta
+- Los pulpos telegraphan su amenaza con una zona visible antes de atrapar
+- Las algas moviles desplazan al jugador mientras este arriba de la plataforma
 
 ## Dificultad
 
@@ -76,6 +79,7 @@ El flujo esperado del juego es:
 
 - Caer en un pozo cuenta como dano o fallo de nivel
 - Tocar un enemigo hostil cuenta como dano
+- Quedarse demasiado tiempo dentro de la zona de amenaza de un pulpo tambien cuenta como dano
 - Al reiniciar, el jugador vuelve al spawn del nivel
 - Los coleccionables del intento actual vuelven a su estado inicial
 - Los enemigos vuelven a su posicion original
@@ -84,6 +88,8 @@ El flujo esperado del juego es:
 
 - Al juntar un pez: efecto visual y sonido corto
 - Al recibir dano: animacion o flash y sonido
+- Al activar un surtidor: columna de burbujas, brillo y mensaje corto
+- Al neutralizar un enemigo con burbujas: estallido visual reconocible
 - Al completar nivel: fanfarria breve, baile del monstruo y transicion
 - Al pausar: overlay claro
 - Al llegar a una salida bloqueada: feedback de que faltan peces

@@ -45,9 +45,13 @@ La ventana para el segundo toque es deliberadamente generosa: alrededor de `0.4s
 
 En el estado actual del juego:
 
+- las algas moviles hacen un recorrido oscilante y te arrastran si quedas arriba
+- las hormigas acuaticas patrullan y se activan si te detectan cerca
+- los pulpos muestran una zona de amenaza antes de atrapar
 - los lanzadores de burbujas se activan al tocarlos
-- las burbujas suben en columna y pueden eliminar hormigas o pulpos
-- los peces linterna pierden intensidad cuando el jugador se acerca
+- las burbujas suben en columna, tienen recarga corta y pueden eliminar hormigas o pulpos
+- los peces linterna pierden intensidad y se alejan cuando el jugador se acerca
+- el `level_01` ya usa estas mecanicas como parte del recorrido y de la recoleccion de peces
 
 ## Problemas comunes
 

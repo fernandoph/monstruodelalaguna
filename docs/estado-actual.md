@@ -2,63 +2,52 @@
 
 ## Resumen
 
-El repositorio contiene un prototipo chico en `pygame` con una base de platformer 2D. Ya existe una ventana funcional, un mapa simple, un personaje controlable, gravedad, salto, colisiones contra tiles y un scroll horizontal basico.
+El proyecto ya no es solo un prototipo tecnico. Hoy existe un primer nivel jugable con menu, HUD, dificultad, recoleccion de peces, salida bloqueada, pausa, reinicio y un conjunto inicial de amenazas y objetos especiales.
+
+## Estado del roadmap
+
+- `Milestone 0`: cerrado
+- `Milestone 1`: cerrado
+- `Milestone 2`: cerrado en una primera version jugable y legible
+- `Milestone 3`: pendiente
+- `Milestone 4`: pendiente
 
 ## Lo que ya funciona
 
-- Inicializacion de `pygame`
-- Loop principal de juego
-- Carga de un nivel desde una matriz embebida
-- Creacion de tiles solidos
-- Spawn del jugador
-- Movimiento horizontal
-- Salto
-- Gravedad
-- Colision horizontal y vertical
-- Scroll horizontal basado en la posicion del jugador
-- Carga de frames de animacion desde carpetas
+- Estructura modular con `data/`, `entities/` y `world/`
+- Carga de nivel desde archivos externos
+- Placeholder visual robusto cuando faltan assets
+- Menu de inicio con seleccion de dificultad
+- HUD con peces, nivel y modo o vidas
+- Movimiento, salto, `super jump`, gravedad y colisiones
+- Estados del jugador `idle`, `run`, `jump`, `fall`, `crouch`, `hurt` y `dance`
+- Peces coleccionables y salida bloqueada hasta cumplir meta
+- Dificultad `facil` y `normal`
+- Pausa, reinicio, `game_over` y `victory`
+- Fondo y tiles de laguna con render cacheado
+- Hormigas acuaticas con patrulla y alerta
+- Pulpos con zona de amenaza visible
+- Algas moviles que transportan al jugador
+- Lanzadores de burbujas con neutralizacion de enemigos
+- Peces linterna con brillo reactivo
 
-## Lo que existe pero esta incompleto
+## Lo que todavia falta
 
-- El personaje ya busca animaciones `run`, `jump` y `fall`, pero hoy solo hay frames `idle`
-- El mapa contiene al menos un marcador extra que no esta conectado a ninguna logica
-- El `README` define controles y sistemas que todavia no existen en el codigo
-
-## Lo que todavia no existe
-
-- Agacharse
-- Recoleccion de peces
-- Sistema de vidas
-- Dificultad
-- Pausa
-- Reinicio de nivel
-- Carteles de inicio y salida
-- Multiples niveles
-- Enemigos
-- Plataformas moviles
-- Lanzadores de burbujas
-- Peces linterna
-- Pantallas de menu, game over o victoria
-- HUD
-- Sonido y musica integrados
-- Persistencia o configuracion externa
+- Nivel 2
+- Nivel 3
+- Curva completa de progresion entre niveles
+- Secuencia de victoria final del juego completo
+- Assets finales consistentes para jugador, enemigos y UI
+- Sonido y musica
+- Pasada de balance y testing mas profunda
 
 ## Deuda tecnica visible
 
-- No hay `.gitignore`
-- `venv/` esta dentro del repo
-- Hay `__pycache__/` versionado o sin ignorar
-- No hay `requirements.txt` ni `pyproject.toml`
-- La configuracion esta acoplada al codigo
-- El nivel esta hardcodeado en una lista de strings
-- No hay separacion entre entidades solidas, peligros, coleccionables y triggers
+- El arte sigue siendo procedural o placeholder en varias entidades
+- No hay audio integrado
+- El contenido todavia esta concentrado en un solo nivel
+- Falta una bateria de pruebas mas formal; hoy predominan smoke tests
 
 ## Lectura del estado del proyecto
 
-La base actual sirve para empezar a construir el juego, pero todavia no alcanza para sostener la complejidad que pide el `README`. Antes de agregar mecanicas conviene ordenar la estructura, definir un formato de niveles y desacoplar los sistemas principales.
-
-## Riesgos inmediatos
-
-- Si se agregan mecanicas encima de la estructura actual, el codigo va a crecer de forma fragil
-- Si los assets se producen sin reglas comunes, despues van a romper alineacion, hitboxes o scroll
-- Si los niveles siguen embebidos en codigo, mantener tres niveles completos sera costoso
+La base tecnica ya soporta crecimiento. El riesgo principal ya no es la estructura sino el contenido: hace falta construir los niveles restantes sin perder claridad de lectura ni balance.

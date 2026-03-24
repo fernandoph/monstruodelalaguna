@@ -12,6 +12,7 @@ from entities.water_ant import WaterAnt
 from settings import (
     ALGAE_PLATFORM_MARKER,
     BUBBLE_LAUNCHER_MARKER,
+    BUBBLE_POP_COLOR,
     EMPTY_TILE_MARKER,
     EXIT_MARKERS,
     FISH_MARKER,
@@ -27,6 +28,7 @@ from settings import (
     LAGOON_WATER_TOP,
     LANTERN_FISH_MARKER,
     OCTOPUS_MARKER,
+    PLAYER_DAMAGE_FLASH_COLOR,
     PLAYER_SPAWN_MARKER,
     SOLID_TILE_MARKER,
     TILE_SIZE,
@@ -49,6 +51,13 @@ class Level:
         self.fail_countdown = 0
         self.completion_countdown = 0
         self.blocked_exit_feedback_timer = 0
+        self.event_text = ""
+        self.event_timer = 0
+        self.tutorial_text = ""
+        self.tutorial_timer = 0
+        self.shown_hints = set()
+        self.bubble_particles = []
+        self.damage_flash_timer = 0
         self.camera_offset_x = 0
         self.reserved_markers = {}
         self.setup_level(level_definition.layout)
@@ -147,6 +156,7 @@ class Level:
     def vertical_movement_collision(self):
         player = self.player.sprite
         player.on_ground = False
+        player.current_platform = None
         player.apply_gravity()
         landed_on_platform = False
 
@@ -166,8 +176,18 @@ class Level:
                 continue
             if player.direction.y >= 0 and player.hitbox.bottom <= platform.rect.top + 24:
                 player.hitbox.bottom = platform.rect.top
+                if platform.delta.x != 0:
+                    player.hitbox.x += round(platform.delta.x)
+                    for tile in self.tiles.sprites():
+                        if not tile.rect.colliderect(player.hitbox):
+                            continue
+                        if platform.delta.x > 0:
+                            player.hitbox.right = tile.rect.left
+                        else:
+                            player.hitbox.left = tile.rect.right
                 player.direction.y = 0
                 player.on_ground = True
+                player.current_platform = platform
                 landed_on_platform = True
 
         if landed_on_platform:
@@ -191,16 +211,52 @@ class Level:
             return "Cuidado con los pozos y obstaculos"
         if self.completion_countdown > 0:
             return "Nivel completado"
+        if self.event_timer > 0:
+            return self.event_text
+        if self.tutorial_timer > 0:
+            return self.tutorial_text
         return ""
+
+    def show_event_message(self, text, duration=75):
+        self.event_text = text
+        self.event_timer = duration
+
+    def show_tutorial_hint(self, hint_id, text, duration=150):
+        if hint_id in self.shown_hints:
+            return
+        self.shown_hints.add(hint_id)
+        self.tutorial_text = text
+        self.tutorial_timer = duration
+
+    def spawn_bubble_burst(self, center):
+        velocities = (
+            (-1.2, -3.6),
+            (1.0, -4.2),
+            (-2.0, -2.4),
+            (2.2, -2.8),
+            (-0.8, -5.0),
+            (0.6, -3.1),
+        )
+        for index, velocity in enumerate(velocities):
+            self.bubble_particles.append(
+                {
+                    "position": pygame.math.Vector2(center),
+                    "velocity": pygame.math.Vector2(velocity),
+                    "radius": 4 + (index % 2),
+                    "life": 20 + index * 2,
+                    "max_life": 20 + index * 2,
+                }
+            )
 
     def update_world_shift(self):
         self.camera_offset_x -= self.world_shift
+        player = self.player.sprite
         for group in (self.tiles, self.hazards, self.fishes, self.exits):
             group.update(self.world_shift)
         for sprite in self.algae_platforms.sprites():
             sprite.update(self.world_shift)
         for sprite in self.water_ants.sprites():
-            sprite.update(self.world_shift)
+            sprite.update(self.world_shift, player)
         for sprite in self.octopuses.sprites():
             sprite.update(self.world_shift)
         for sprite in self.bubble_launchers.sprites():
@@ -224,6 +280,7 @@ class Level:
             return
         self.failure_reason = reason
         self.fail_countdown = 30
+        self.damage_flash_timer = 18
         self.player.sprite.start_hurt()
 
     def check_hazards(self):
@@ -251,13 +308,16 @@ class Level:
     def update_lantern_fishes(self):
         player = self.player.sprite
         for lantern_fish in self.lantern_fishes.sprites():
-            lantern_fish.update_glow(player)
+            dim_state_changed = lantern_fish.update_glow(player)
+            if dim_state_changed and lantern_fish.dimmed:
+                self.show_event_message("La linterna se encoge cuando te acercas", duration=80)
 
     def update_bubble_launchers(self):
         player = self.player.sprite
         for launcher in self.bubble_launchers.sprites():
             if launcher.rect.colliderect(player.hitbox):
-                launcher.activate()
+                if launcher.activate():
+                    self.show_event_message("Surtidor activado", duration=70)
 
     def resolve_bubble_effects(self):
         for launcher in self.bubble_launchers.sprites():
@@ -267,9 +327,15 @@ class Level:
             bubble_rect = launcher.bubble_rect
             for ant in self.water_ants.sprites():
                 if bubble_rect.colliderect(ant.rect):
+                    launcher.note_enemy_hit()
+                    self.spawn_bubble_burst(ant.rect.center)
+                    self.show_event_message("La burbuja neutralizo una hormiga", duration=80)
                     ant.kill()
             for octopus in self.octopuses.sprites():
                 if bubble_rect.colliderect(octopus.rect):
+                    launcher.note_enemy_hit()
+                    self.spawn_bubble_burst(octopus.rect.center)
+                    self.show_event_message("La columna de burbujas despejo el pulpo", duration=80)
                     octopus.kill()
 
     def check_exit_collision(self):
@@ -286,9 +352,49 @@ class Level:
 
             self.blocked_exit_feedback_timer = 45
 
+    def update_context_hints(self):
+        player = self.player.sprite
+
+        if any(platform.rect.inflate(120, 80).colliderect(player.hitbox) for platform in self.algae_platforms.sprites()):
+            self.show_tutorial_hint("algae", "Las algas te transportan si te quedas arriba", duration=160)
+
+        if any(launcher.rect.inflate(120, 80).colliderect(player.hitbox) for launcher in self.bubble_launchers.sprites()):
+            self.show_tutorial_hint("bubble", "Toca el surtidor para lanzar burbujas contra enemigos", duration=160)
+
+        if any(ant.rect.inflate(140, 70).colliderect(player.hitbox) and ant.is_alerted for ant in self.water_ants.sprites()):
+            self.show_tutorial_hint("water_ant", "La hormiga te persigue cuando te detecta cerca", duration=160)
+
+        if any(octopus.threat_rect.colliderect(player.hitbox) for octopus in self.octopuses.sprites()):
+            self.show_tutorial_hint("octopus", "El pulpo avisa antes de atrapar: segui moviendote", duration=170)
+
+        if any(lantern.rect.inflate(120, 90).colliderect(player.hitbox) and lantern.dimmed for lantern in self.lantern_fishes.sprites()):
+            self.show_tutorial_hint("lantern", "Los peces linterna bajan su brillo si te acercas mucho", duration=170)
+
+    def update_visual_effects(self):
+        updated_particles = []
+        for particle in self.bubble_particles:
+            particle["life"] -= 1
+            if particle["life"] <= 0:
+                continue
+            particle["position"] += particle["velocity"]
+            particle["velocity"].y += 0.06
+            updated_particles.append(particle)
+        self.bubble_particles = updated_particles
+
     def update_level_timers(self):
         if self.blocked_exit_feedback_timer > 0:
             self.blocked_exit_feedback_timer -= 1
+
+        if self.event_timer > 0:
+            self.event_timer -= 1
+
+        if self.tutorial_timer > 0:
+            self.tutorial_timer -= 1
+
+        if self.damage_flash_timer > 0:
+            self.damage_flash_timer -= 1
+
+        self.update_visual_effects()
 
         if self.fail_countdown > 0:
             self.fail_countdown -= 1
@@ -315,30 +421,61 @@ class Level:
         self.resolve_bubble_effects()
         self.check_exit_collision()
         self.check_hazards()
+        self.update_context_hints()
         player.get_status()
         player.animate()
         self.update_level_timers()
 
     def draw(self):
         self.draw_background()
-        for lantern_fish in self.lantern_fishes.sprites():
-            lantern_fish.draw_glow(self.display_surface)
         self.tiles.draw(self.display_surface)
         self.algae_platforms.draw(self.display_surface)
         self.hazards.draw(self.display_surface)
         for launcher in self.bubble_launchers.sprites():
             launcher.draw_effect(self.display_surface)
-        self.bubble_launchers.draw(self.display_surface)
         self.fishes.draw(self.display_surface)
         self.water_ants.draw(self.display_surface)
+        for octopus in self.octopuses.sprites():
+            octopus.draw_threat(self.display_surface)
         self.octopuses.draw(self.display_surface)
-        self.exits.draw(self.display_surface)
+        self.bubble_launchers.draw(self.display_surface)
         self.lantern_fishes.draw(self.display_surface)
+        for lantern_fish in self.lantern_fishes.sprites():
+            lantern_fish.draw_glow(self.display_surface)
+        self.exits.draw(self.display_surface)
+        self.draw_visual_effects()
         self.player.draw(self.display_surface)
+        self.draw_damage_flash()
 
     def run(self):
         self.update()
         self.draw()
+
+    def draw_visual_effects(self):
+        for particle in self.bubble_particles:
+            alpha = int(255 * (particle["life"] / particle["max_life"]))
+            radius = max(2, particle["radius"])
+            particle_surface = pygame.Surface((radius * 4, radius * 4), pygame.SRCALPHA)
+            pygame.draw.circle(
+                particle_surface,
+                (*BUBBLE_POP_COLOR[:3], alpha),
+                (radius * 2, radius * 2),
+                radius,
+                2,
+            )
+            self.display_surface.blit(
+                particle_surface,
+                (particle["position"].x - radius * 2, particle["position"].y - radius * 2),
+                special_flags=pygame.BLEND_RGBA_ADD,
+            )
+
+    def draw_damage_flash(self):
+        if self.damage_flash_timer <= 0:
+            return
+        flash_alpha = int(PLAYER_DAMAGE_FLASH_COLOR[3] * (self.damage_flash_timer / 18))
+        flash = pygame.Surface(self.display_surface.get_size(), pygame.SRCALPHA)
+        flash.fill((*PLAYER_DAMAGE_FLASH_COLOR[:3], flash_alpha))
+        self.display_surface.blit(flash, (0, 0))
 
     def draw_background(self):
         self.display_surface.blit(self.background_base_surface, (0, 0))
