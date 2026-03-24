@@ -9,6 +9,15 @@ from settings import (
     EXIT_MARKERS,
     FISH_MARKER,
     HAZARD_MARKER,
+    LAGOON_MIST,
+    LAGOON_REED_DARK,
+    LAGOON_REED_LIGHT,
+    LAGOON_SKY_BOTTOM,
+    LAGOON_SKY_TOP,
+    LAGOON_SUN_GLOW,
+    LAGOON_SURFACE_LINE,
+    LAGOON_WATER_BOTTOM,
+    LAGOON_WATER_TOP,
     PLAYER_SPAWN_MARKER,
     SOLID_TILE_MARKER,
     TILE_SIZE,
@@ -30,6 +39,7 @@ class Level:
         self.fail_countdown = 0
         self.completion_countdown = 0
         self.blocked_exit_feedback_timer = 0
+        self.camera_offset_x = 0
         self.reserved_markers = {}
         self.setup_level(level_definition.layout)
 
@@ -46,7 +56,18 @@ class Level:
                 y = row_index * TILE_SIZE
 
                 if cell == SOLID_TILE_MARKER:
-                    self.tiles.add(Tile((x, y), TILE_SIZE))
+                    top_exposed = self.is_exposed(layout, row_index - 1, col_index)
+                    left_exposed = self.is_exposed(layout, row_index, col_index - 1)
+                    right_exposed = self.is_exposed(layout, row_index, col_index + 1)
+                    self.tiles.add(
+                        Tile(
+                            (x, y),
+                            TILE_SIZE,
+                            top_exposed=top_exposed,
+                            left_exposed=left_exposed,
+                            right_exposed=right_exposed,
+                        )
+                    )
                 elif cell == PLAYER_SPAWN_MARKER:
                     self.player.add(Player((x, y)))
                 elif cell == FISH_MARKER:
@@ -60,6 +81,13 @@ class Level:
 
         if self.player.sprite is None:
             raise ValueError("Level loaded without a valid player spawn.")
+
+    def is_exposed(self, layout, row_index, col_index):
+        if row_index < 0 or row_index >= len(layout):
+            return True
+        if col_index < 0 or col_index >= len(layout[row_index]):
+            return True
+        return layout[row_index][col_index] != SOLID_TILE_MARKER
 
     def scroll_x(self):
         player = self.player.sprite
@@ -127,6 +155,7 @@ class Level:
         return ""
 
     def update_world_shift(self):
+        self.camera_offset_x -= self.world_shift
         for group in (self.tiles, self.hazards, self.fishes, self.exits):
             group.update(self.world_shift)
 
@@ -205,6 +234,7 @@ class Level:
         self.update_level_timers()
 
     def draw(self):
+        self.draw_background()
         self.tiles.draw(self.display_surface)
         self.hazards.draw(self.display_surface)
         self.fishes.draw(self.display_surface)
@@ -214,3 +244,117 @@ class Level:
     def run(self):
         self.update()
         self.draw()
+
+    def draw_background(self):
+        width = self.display_surface.get_width()
+        height = self.display_surface.get_height()
+
+        horizon_y = max(72, int(height * 0.24))
+        self.draw_vertical_gradient((0, 0, width, horizon_y), LAGOON_SKY_TOP, LAGOON_SKY_BOTTOM)
+        self.draw_vertical_gradient(
+            (0, horizon_y, width, height - horizon_y),
+            LAGOON_WATER_TOP,
+            LAGOON_WATER_BOTTOM,
+        )
+
+        glow_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        pygame.draw.circle(glow_surface, LAGOON_SUN_GLOW, (width // 4, horizon_y // 2), 150)
+        pygame.draw.circle(glow_surface, LAGOON_SUN_GLOW, (width // 3, horizon_y - 10), 110)
+        self.display_surface.blit(glow_surface, (0, 0))
+
+        surface_band = pygame.Surface((width, 32), pygame.SRCALPHA)
+        for index in range(6):
+            y = 4 + index * 4
+            pygame.draw.line(
+                surface_band,
+                LAGOON_SURFACE_LINE,
+                (0, y),
+                (width, y + (index % 2)),
+                2,
+            )
+        self.display_surface.blit(surface_band, (0, horizon_y - 14))
+
+        self.draw_water_plants(height, depth_factor=0.25, color=LAGOON_REED_LIGHT, base_height=140)
+        self.draw_water_plants(height, depth_factor=0.55, color=LAGOON_REED_DARK, base_height=190)
+        self.draw_lily_pads(horizon_y)
+        self.draw_mist(width, horizon_y)
+        self.draw_underwater_particles(width, height, horizon_y)
+
+    def draw_vertical_gradient(self, rect, top_color, bottom_color):
+        x, y, width, height = rect
+        if height <= 0:
+            return
+
+        for row in range(height):
+            blend = row / max(1, height - 1)
+            color = tuple(
+                int(top_color[index] + (bottom_color[index] - top_color[index]) * blend)
+                for index in range(3)
+            )
+            pygame.draw.line(
+                self.display_surface,
+                color,
+                (x, y + row),
+                (x + width, y + row),
+            )
+
+    def draw_water_plants(self, screen_height, depth_factor, color, base_height):
+        width = self.display_surface.get_width()
+        layer_surface = pygame.Surface((width, screen_height), pygame.SRCALPHA)
+        parallax_offset = (self.camera_offset_x * depth_factor) % 140
+        base_y = screen_height - 10
+
+        for index in range(-2, (width // 70) + 4):
+            root_x = int(index * 70 - parallax_offset)
+            plant_height = base_height + (index % 4) * 18
+            for blade_index in range(3):
+                shift = blade_index * 10
+                points = [
+                    (root_x + shift, base_y),
+                    (root_x - 8 + shift, base_y - plant_height * 0.45),
+                    (root_x + 4 + shift, base_y - plant_height),
+                    (root_x + 12 + shift, base_y - plant_height * 0.52),
+                    (root_x + 8 + shift, base_y),
+                ]
+                pygame.draw.polygon(layer_surface, color, points)
+
+        self.display_surface.blit(layer_surface, (0, 0))
+
+    def draw_lily_pads(self, horizon_y):
+        width = self.display_surface.get_width()
+        pad_surface = pygame.Surface((width, horizon_y + 24), pygame.SRCALPHA)
+        offset = (self.camera_offset_x * 0.12) % 220
+
+        for index in range(-1, (width // 160) + 3):
+            center_x = int(index * 160 - offset)
+            center_y = horizon_y - 6 + (index % 2) * 8
+            pad_rect = pygame.Rect(center_x, center_y, 56, 18)
+            pygame.draw.ellipse(pad_surface, (59, 118, 79, 180), pad_rect)
+            pygame.draw.line(
+                pad_surface,
+                (88, 158, 101, 220),
+                (pad_rect.centerx, pad_rect.centery),
+                (pad_rect.right - 6, pad_rect.centery - 2),
+                2,
+            )
+
+        self.display_surface.blit(pad_surface, (0, 0))
+
+    def draw_mist(self, width, horizon_y):
+        mist_surface = pygame.Surface((width, horizon_y + 40), pygame.SRCALPHA)
+        for index in range(5):
+            mist_rect = pygame.Rect(index * 220 - 30, horizon_y - 20 + (index % 2) * 8, 240, 44)
+            pygame.draw.ellipse(mist_surface, LAGOON_MIST, mist_rect)
+        self.display_surface.blit(mist_surface, (0, 0))
+
+    def draw_underwater_particles(self, width, height, horizon_y):
+        particle_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        offset = self.camera_offset_x * 0.08
+
+        for index in range(18):
+            x = int((index * 91 + offset) % (width + 80)) - 40
+            y = horizon_y + 18 + (index * 43) % max(60, height - horizon_y - 28)
+            radius = 2 + (index % 3)
+            pygame.draw.circle(particle_surface, (210, 240, 228, 58), (x, y), radius)
+
+        self.display_surface.blit(particle_surface, (0, 0))
