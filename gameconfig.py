@@ -1,24 +1,24 @@
-level_map = [
-'                                                  ',
-'                                                  ',
-'                                                  ',
-'                                                  ',
-'          X                                       ',
-'          X       XXX                             ',
-'          XXXXXX                                  ',
-'          X           X                           ',
-'       X  X                                       ',
-'P    XXX  X XX               A                    ',
-'XXXXXXXXX XXXXXXXXXXXXXXXXXXXXXXXX XXXXXXXXXXXXXXX'                         
-]
+from data.level_loader import load_level_definition
+from settings import (
+    DEFAULT_LEVEL_ID,
+    FPS,
+    SCREEN_BACKGROUND_COLOR,
+    SCREEN_CAPTION,
+    SCREEN_WIDTH,
+    TILE_SIZE,
+)
 
-# Game config
-tile_size = 64
-screen_width = 1600
-screen_height = len(level_map) * tile_size
+
+_default_level = load_level_definition(DEFAULT_LEVEL_ID)
+
+level_map = _default_level.layout
+
+tile_size = TILE_SIZE
+screen_width = SCREEN_WIDTH
+screen_height = _default_level.pixel_height
 
 screen_size = (screen_width, screen_height)
 screen_center = (screen_width // 2, screen_height // 2)
-screen_caption = "El Monstruo de la Laguna"
-screen_color = (0, 0, 0)
-fps = 60
+screen_caption = SCREEN_CAPTION
+screen_color = SCREEN_BACKGROUND_COLOR
+fps = FPS

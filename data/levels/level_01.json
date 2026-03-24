@@ -1,0 +1,8 @@
+{
+  "id": "level_01",
+  "name": "Laguna Inicial",
+  "layout": "level_01.txt",
+  "fish_goal": 0,
+  "background_color": [0, 0, 0],
+  "allowed_markers": [" ", "X", "P", "A"]
+}
