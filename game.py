@@ -35,6 +35,9 @@ class Game:
         self.lives = None
         self.state = None
         self.audio = None
+        self.transition_frames = 0
+        self.transition_title = ""
+        self.transition_lines = []
         self.title_font = pygame.font.Font(None, 72)
         self.font = pygame.font.Font(None, 36)
         self.small_font = pygame.font.Font(None, 28)
@@ -49,6 +52,28 @@ class Game:
         self.screen = pygame.display.set_mode(screen_size, pygame.DOUBLEBUF)
         self.level = Level(self.level_definition, self.screen)
 
+    def find_level_index(self, level_id):
+        try:
+            return self.level_order.index(level_id)
+        except ValueError:
+            return self.current_level_index
+
+    def build_level_intro_lines(self):
+        lines = [f"Nivel {self.current_level_index + 1} de {len(self.level_order)}"]
+        if self.level_definition.intro_text:
+            lines.append(self.level_definition.intro_text)
+        lines.append(f"Meta: juntar {self.level_definition.fish_goal} peces")
+        lines.append("Enter o Espacio para empezar")
+        return lines
+
+    def start_level_transition(self, level_id):
+        self.current_level_index = self.find_level_index(level_id)
+        self.load_level(level_id)
+        self.transition_frames = 140
+        self.transition_title = self.level_definition.name
+        self.transition_lines = self.build_level_intro_lines()
+        self.change_state("level_intro")
+
     def change_state(self, new_state):
         if new_state == self.state:
             return
@@ -61,7 +86,7 @@ class Game:
 
         if new_state == "menu":
             self.audio.play_music("menu")
-        elif new_state == "playing":
+        elif new_state in {"playing", "level_intro"}:
             if previous_state == "paused":
                 self.audio.resume_music()
             else:
@@ -73,6 +98,8 @@ class Game:
             self.audio.play_music(None)
             self.audio.play_sfx("game_over")
         elif new_state == "victory":
+            if self.level and self.level.player.sprite:
+                self.level.player.sprite.start_dance(duration=999999)
             self.audio.play_music(None)
             self.audio.play_sfx("victory")
 
@@ -80,10 +107,9 @@ class Game:
         self.difficulty = difficulty
         self.lives = None if difficulty == "facil" else PLAYER_MAX_LIVES
         self.current_level_index = 0
-        self.load_level(self.level_order[self.current_level_index])
         if self.audio:
             self.audio.play_sfx("menu_select")
-        self.change_state("playing")
+        self.start_level_transition(self.level_order[self.current_level_index])
 
     def restart_level(self, play_sound=True):
         self.load_level(self.level_definition.level_id)
@@ -99,6 +125,11 @@ class Game:
             self.start_new_game("facil")
         elif event.key == pygame.K_2:
             self.start_new_game("normal")
+
+    def handle_level_intro_key(self, event):
+        if event.key in (pygame.K_RETURN, pygame.K_SPACE):
+            self.transition_frames = 0
+            self.change_state("playing")
 
     def handle_playing_key(self, event):
         if event.key == pygame.K_p:
@@ -125,6 +156,8 @@ class Game:
             if event.type == pygame.KEYDOWN:
                 if self.state == "menu":
                     self.handle_menu_key(event)
+                elif self.state == "level_intro":
+                    self.handle_level_intro_key(event)
                 elif self.state == "playing":
                     self.handle_playing_key(event)
                 elif self.state == "paused":
@@ -144,20 +177,24 @@ class Game:
     def handle_level_complete(self):
         next_level_id = self.level_definition.next_level
         if next_level_id:
-            self.load_level(next_level_id)
-            self.change_state("playing")
+            self.start_level_transition(next_level_id)
             return
 
         next_index = self.current_level_index + 1
         if next_index < len(self.level_order):
-            self.current_level_index = next_index
-            self.load_level(self.level_order[self.current_level_index])
-            self.change_state("playing")
+            self.start_level_transition(self.level_order[next_index])
             return
 
         self.change_state("victory")
 
     def update(self):
+        if self.state == "level_intro":
+            if self.transition_frames > 0:
+                self.transition_frames -= 1
+            if self.transition_frames == 0:
+                self.change_state("playing")
+            return
+
         if self.state != "playing":
             return
 
@@ -234,6 +271,10 @@ class Game:
     def draw_world(self):
         self.screen.fill(self.level.background_color if self.level else SCREEN_BACKGROUND_COLOR)
         if self.level:
+            if self.state == "victory":
+                player = self.level.player.sprite
+                player.get_status()
+                player.animate()
             self.level.draw()
 
     def draw(self):
@@ -244,12 +285,21 @@ class Game:
         self.draw_world()
         self.draw_hud()
 
-        if self.state == "paused":
+        if self.state == "level_intro":
+            self.draw_overlay(self.transition_title, self.transition_lines)
+        elif self.state == "paused":
             self.draw_overlay("Pausa", ["P o Esc para continuar", "R para reiniciar", "M para volver al menu"])
         elif self.state == "game_over":
             self.draw_overlay("Game Over", ["No quedan vidas", "Enter o R para volver al menu"])
         elif self.state == "victory":
-            self.draw_overlay("Victoria", ["Juntaste los peces y llegaste a la salida", "Enter o R para volver al menu"])
+            self.draw_overlay(
+                "Juego Completado",
+                [
+                    f"Superaste los {len(self.level_order)} niveles de la laguna",
+                    "El monstruo encontro la salida y se puso a bailar",
+                    "Enter o R para volver al menu",
+                ],
+            )
 
     def run(self, max_frames=None):
         frame_count = 0

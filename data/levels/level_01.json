@@ -3,7 +3,8 @@
   "name": "Laguna Inicial",
   "layout": "level_01.txt",
   "fish_goal": 5,
-  "next_level": null,
+  "next_level": "level_02",
+  "intro_text": "Aprende el camino, junta peces y abre la salida.",
   "background_color": [4, 12, 26],
   "allowed_markers": [" ", "X", "P", "E", "A", "F", "H", "G", "N", "O", "B", "L"]
 }

@@ -29,26 +29,48 @@ class LanternFish(pygame.sprite.Sprite):
         self.glow_alpha = LANTERN_FISH_GLOW[3]
         self.dimmed = False
 
+    @property
+    def bulb_world_position(self):
+        return (self.rect.x + 46, self.rect.y + 8)
+
     def build_frames(self, body_color):
         return [self.build_frame(offset, body_color) for offset in (-2, 1, 3, 0)]
 
     def build_frame(self, tail_offset, body_color):
-        surface = pygame.Surface((TILE_SIZE - 12, TILE_SIZE // 2), pygame.SRCALPHA)
-        body_rect = pygame.Rect(8, 10, 24, 14)
+        surface = pygame.Surface((TILE_SIZE, TILE_SIZE // 2 + 10), pygame.SRCALPHA)
+        body_rect = pygame.Rect(10, 14, 28, 18)
+        belly_rect = pygame.Rect(16, 22, 16, 8)
+        jaw_points = [(12, 24), (24, 20), (32, 28), (18, 30)]
+        tail_base_x = body_rect.right - 2
+        tail_tip_x = surface.get_width() - 8
+
         pygame.draw.ellipse(surface, body_color, body_rect)
+        pygame.draw.ellipse(surface, (*LANTERN_FISH_GLOW[:3], 40), belly_rect)
         pygame.draw.polygon(
             surface,
             LANTERN_FISH_FIN,
             [
-                (body_rect.right - 2, body_rect.centery),
-                (surface.get_width() - 6, 8 + tail_offset),
-                (surface.get_width() - 6, surface.get_height() - 8 - tail_offset),
+                (tail_base_x, body_rect.centery),
+                (tail_tip_x, 12 + tail_offset),
+                (tail_tip_x, surface.get_height() - 12 - tail_offset),
             ],
         )
-        pygame.draw.circle(surface, (255, 255, 255), (body_rect.x + 8, body_rect.y + 5), 3)
-        pygame.draw.circle(surface, (30, 30, 32), (body_rect.x + 8, body_rect.y + 5), 1)
-        pygame.draw.line(surface, LANTERN_FISH_FIN, (body_rect.x + 18, body_rect.y + 4), (body_rect.x + 28, 0), 2)
-        pygame.draw.circle(surface, LANTERN_FISH_GLOW[:3], (body_rect.x + 30, 1), 4)
+        pygame.draw.polygon(surface, body_color, jaw_points)
+        pygame.draw.polygon(
+            surface,
+            LANTERN_FISH_FIN,
+            [(26, 14), (34, 8 + tail_offset // 2), (36, 18)],
+        )
+        pygame.draw.polygon(
+            surface,
+            LANTERN_FISH_FIN,
+            [(22, 28), (30, 34 - tail_offset // 3), (34, 28)],
+        )
+        pygame.draw.line(surface, LANTERN_FISH_FIN, (32, 15), (45, 6), 2)
+        pygame.draw.circle(surface, LANTERN_FISH_GLOW[:3], (47, 5), 4)
+        pygame.draw.circle(surface, (255, 255, 255), (20, 19), 3)
+        pygame.draw.circle(surface, (22, 24, 32), (20, 19), 1)
+        pygame.draw.line(surface, (228, 214, 162), (14, 27), (22, 27), 1)
         return surface.convert_alpha()
 
     def update(self, x_shift):
@@ -94,12 +116,14 @@ class LanternFish(pygame.sprite.Sprite):
         return previous_dimmed != self.dimmed
 
     def draw_glow(self, surface):
-        glow_surface = pygame.Surface((120, 120), pygame.SRCALPHA)
+        glow_surface = pygame.Surface((144, 96), pygame.SRCALPHA)
         glow_rgb = LANTERN_FISH_DIM_GLOW[:3] if self.dimmed else LANTERN_FISH_GLOW[:3]
         glow_color = (*glow_rgb, self.glow_alpha)
-        outer_alpha = max(12, self.glow_alpha // 3)
-        radius = 24 if self.dimmed else 34
-        outer_radius = 42 if self.dimmed else 54
-        pygame.draw.circle(glow_surface, glow_color, (60, 60), radius)
-        pygame.draw.circle(glow_surface, (*glow_rgb, outer_alpha), (60, 60), outer_radius)
-        surface.blit(glow_surface, (self.rect.centerx - 60, self.rect.centery - 60), special_flags=pygame.BLEND_RGBA_ADD)
+        outer_alpha = max(8, self.glow_alpha // 3)
+        radius = 14 if self.dimmed else 22
+        outer_radius = 28 if self.dimmed else 42
+        glow_center = (56, 34)
+        pygame.draw.circle(glow_surface, glow_color, glow_center, radius)
+        pygame.draw.circle(glow_surface, (*glow_rgb, outer_alpha), glow_center, outer_radius)
+        bulb_x, bulb_y = self.bulb_world_position
+        surface.blit(glow_surface, (bulb_x - glow_center[0], bulb_y - glow_center[1]))

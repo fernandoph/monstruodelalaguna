@@ -45,6 +45,8 @@ La ventana para el segundo toque es deliberadamente generosa: alrededor de `0.4s
 
 En el estado actual del juego:
 
+- la partida recorre 3 niveles seguidos en una sola sesion
+- cada nivel arranca con una breve pantalla de presentacion
 - las algas moviles hacen un recorrido oscilante y te arrastran si quedas arriba
 - las hormigas acuaticas patrullan y se activan si te detectan cerca
 - los pulpos muestran una zona de amenaza antes de atrapar

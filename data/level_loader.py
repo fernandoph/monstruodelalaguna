@@ -19,6 +19,7 @@ class LevelDefinition:
     layout: list[str]
     fish_goal: int
     next_level: Optional[str]
+    intro_text: str
     background_color: tuple[int, int, int]
     metadata_path: Path
     layout_path: Path
@@ -69,6 +70,7 @@ def load_level_definition(level_id):
         layout=layout,
         fish_goal=int(metadata.get("fish_goal", 0)),
         next_level=metadata.get("next_level"),
+        intro_text=str(metadata.get("intro_text", "")).strip(),
         background_color=parse_color(
             metadata.get("background_color", SCREEN_BACKGROUND_COLOR)
         ),

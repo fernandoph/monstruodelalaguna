@@ -1,0 +1,10 @@
+{
+  "id": "level_03",
+  "name": "Corazon de la Fosa",
+  "layout": "level_03.txt",
+  "fish_goal": 12,
+  "next_level": null,
+  "intro_text": "Combina burbujas, pulpos y peces linterna para cerrar la aventura.",
+  "background_color": [2, 10, 22],
+  "allowed_markers": [" ", "X", "P", "E", "A", "F", "H", "G", "N", "O", "B", "L"]
+}

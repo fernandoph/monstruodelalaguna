@@ -327,7 +327,7 @@ class Level:
         for lantern_fish in self.lantern_fishes.sprites():
             dim_state_changed = lantern_fish.update_glow(player)
             if dim_state_changed and lantern_fish.dimmed:
-                self.show_event_message("La linterna se encoge cuando te acercas", duration=80)
+                self.show_event_message("El pez linterna solo ilumina y se apaga si te acercas", duration=95)
                 self.queue_sound_event("lantern_dim")
 
     def update_bubble_launchers(self):
@@ -393,7 +393,7 @@ class Level:
             self.show_tutorial_hint("octopus", "El pulpo avisa antes de atrapar: segui moviendote", duration=170)
 
         if any(lantern.rect.inflate(120, 90).colliderect(player.hitbox) and lantern.dimmed for lantern in self.lantern_fishes.sprites()):
-            self.show_tutorial_hint("lantern", "Los peces linterna bajan su brillo si te acercas mucho", duration=170)
+            self.show_tutorial_hint("lantern", "El pez linterna no se junta: solo ilumina el camino", duration=170)
 
     def update_visual_effects(self):
         updated_particles = []
@@ -466,9 +466,9 @@ class Level:
             octopus.draw_threat(self.display_surface)
         self.octopuses.draw(self.display_surface)
         self.bubble_launchers.draw(self.display_surface)
-        self.lantern_fishes.draw(self.display_surface)
         for lantern_fish in self.lantern_fishes.sprites():
             lantern_fish.draw_glow(self.display_surface)
+        self.lantern_fishes.draw(self.display_surface)
         self.exits.draw(self.display_surface)
         self.draw_visual_effects()
         self.player.draw(self.display_surface)

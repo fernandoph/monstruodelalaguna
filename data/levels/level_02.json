@@ -1,0 +1,10 @@
+{
+  "id": "level_02",
+  "name": "Algas en Marcha",
+  "layout": "level_02.txt",
+  "fish_goal": 8,
+  "next_level": "level_03",
+  "intro_text": "Usa algas moviles, lee la luz y no te dejes alcanzar por las hormigas.",
+  "background_color": [6, 18, 34],
+  "allowed_markers": [" ", "X", "P", "E", "A", "F", "H", "G", "N", "O", "B", "L"]
+}

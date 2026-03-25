@@ -5,22 +5,21 @@
 El flujo esperado del juego es:
 
 1. Pantalla inicial
-2. Seleccion de dificultad
-3. Inicio de nivel
+2. Seleccion de dificultad desde el menu
+3. Presentacion breve del nivel
 4. Juego activo
 5. Pausa o reinicio si el jugador lo pide
 6. Reinicio por dano o caida segun dificultad
 7. Fin de nivel al llegar a la salida con peces suficientes
-8. Transicion al siguiente nivel
+8. Presentacion del nivel siguiente
 9. Victoria final al completar el nivel 3
 
 ## Estados del juego
 
 - `menu`
-- `difficulty_select`
+- `level_intro`
 - `playing`
 - `paused`
-- `level_complete`
 - `game_over`
 - `victory`
 
@@ -66,7 +65,7 @@ El flujo esperado del juego es:
 
 - Cada nivel define una cantidad minima de peces
 - La salida queda bloqueada hasta alcanzar esa cantidad
-- Al tocar la salida con la meta cumplida, se activa `level_complete`
+- Al tocar la salida con la meta cumplida, se prepara la transicion al siguiente nivel
 - El nivel siguiente se desbloquea automaticamente en la misma sesion
 
 ## Reglas de pausa
