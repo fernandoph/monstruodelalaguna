@@ -1,11 +1,9 @@
 
 
-                      L
-                F                  F                    F
-                    G  F                         O
-        F        XXX              XXX        L  XXX       F
-            XXX            N   XXX        XXX
-    X           XXX       XXX         XXX           XXX
-P   X  XX                  B                     B         E
-XXXXXXXXXX    XXXXXXXX   XXXXXXXXX   XXXXXXXXX   XXXXXXXXXXXXXXX
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                        F
+               F                 F
+     F          XXX          XXX              F
+    XX                                     XXX
+P                                                 E
+XXXXXXXXX    XXXXXXXXX    XXXXXXXXX    XXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
